@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import HButton from "./HButton";
+import HeaderButton from "./HeaderButton";
 
 const Navbar = () => {
   return (
@@ -11,8 +11,8 @@ const Navbar = () => {
           </Link>
         </h1>
         <div className="flex gap-2">
-          <HButton name="Login" urls="login" color="blue" />
-          <HButton name="Register" urls="register" color="violet" />
+          <HeaderButton name="Login" urls="login" color="blue" />
+          <HeaderButton name="Register" urls="register" color="violet" />
         </div>
       </div>
     </nav>

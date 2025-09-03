@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-const HButton = ({ name, urls, color }) => {
+const HeaderButton = ({ name, urls, color }) => {
   const colorClass = {
     blue: "bg-blue-500 hover:bg-blue-600",
     violet: "bg-violet-700 hover:bg-violet-800",
@@ -18,4 +18,4 @@ const HButton = ({ name, urls, color }) => {
   );
 };
 
-export default HButton;
+export default HeaderButton;
