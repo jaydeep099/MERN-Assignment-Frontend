@@ -1,9 +1,36 @@
-import { useState } from "react";
+import axios from "axios";
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router";
+import * as Yup from "yup";
+import toast from "react-hot-toast";
+import { AuthContext } from "../../context/AuthContext";
 
+const baseUrl = import.meta.env.VITE_BASE_URL;
+
+async function loginFetch(formData) {
+  try {
+    const response = await axios.post(`${baseUrl}/users/login`, formData);
+    return response;
+  } catch (error) {
+    throw err;
+  }
+}
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+  });
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+
+  const schema = Yup.object().shape({
+    email: Yup.string()
+      .email("Invalid email format")
+      .required("Email is required"),
+
+    password: Yup.string()
+      .min(6, "Password must be at least 6 characters long")
+      .required("Password is required"),
   });
 
   const handleChange = (e) => {
@@ -11,9 +38,32 @@ const Login = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    try {
+      await schema.validate(formData, { abortEarly: false });
+      const response = await loginFetch(formData);
+      console.log(response);
+
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        login(response.data.token, response.data.user);
+        navigate("/");
+      }
+    } catch (err) {
+      if (err.inner) {
+        err.inner.forEach((error) => {
+          toast.error(error.message);
+        });
+      } else if (err.response) {
+        const errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          `Error: ${err.response.status}`;
+        toast.error(errorMessage);
+        console.log("Backend error:", err.response.data);
+      }
+    }
   };
 
   return (

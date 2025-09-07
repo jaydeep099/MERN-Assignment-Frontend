@@ -1,14 +1,36 @@
 import { useState } from "react";
 import * as Yup from "yup";
-import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+
+const baseUrl = import.meta.env.VITE_BASE_URL;
+
+async function register(formData) {
+  try {
+    const data = new FormData();
+    data.append("firstName", formData.firstName);
+    data.append("lastName", formData.lastName);
+    data.append("email", formData.email);
+    data.append("profileImage", formData.profileImage);
+
+    const response = await axios.post(`${baseUrl}/users/register`, data);
+    console.log(response, response.data.message);
+    return response;
+  } catch (err) {
+    throw err;
+  }
+}
 
 const Register = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    profileImage: null,
+    profileImage: "",
   });
+
+  const navigate = useNavigate();
 
   const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
 
@@ -40,27 +62,43 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
 
     try {
       await schema.validate(formData, { abortEarly: false });
-      toast.success("You have registered Successfully !");
-      toast.success("Check your email for setting up password");
-      console.log("Form Data:", formData);
+
+      const response = await register(formData);
+
+      if (response.status === 201) {
+        toast.success(response.data.message);
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          profileImage: "",
+        });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", response.data.user);
+      } else {
+        toast.error(response.data.message);
+      }
     } catch (err) {
       if (err.inner) {
         err.inner.forEach((error) => {
           toast.error(error.message);
         });
-      } else {
-        toast.error("Something went wrong!");
+      } else if (err.response) {
+        const errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          `Error: ${err.response.status}`;
+        toast.error(errorMessage);
+        console.log("Backend error:", err.response.data);
       }
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <Toaster />
       <div className="bg-white md:shadow-gray-400 md:shadow-lg md:rounded-2xl p-6 w-full max-w-md">
         <h1 className="text-2xl font-bold font-sans tracking-wide text-center text-gray-800 mb-6">
           Register
