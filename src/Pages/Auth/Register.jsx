@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import * as Yup from "yup";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Loader } from "lucide-react";
+import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
-
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
 async function register(formData) {
@@ -14,7 +15,7 @@ async function register(formData) {
     data.append("email", formData.email);
     data.append("profileImage", formData.profileImage);
 
-    const response = await axios.post(`${baseUrl}/users/register`, data);
+    const response = await axios.post(`${baseUrl}/auth/register`, data);
     console.log(response, response.data.message);
     return response;
   } catch (err) {
@@ -27,23 +28,40 @@ const Register = () => {
     firstName: "",
     lastName: "",
     email: "",
-    profileImage: "",
+    profileImage: null,
   });
 
+  const [fieldError, setFieldError] = useState({ field: "", message: "" });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { isAuthenticated } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated]);
   const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
 
   const schema = Yup.object().shape({
-    firstName: Yup.string().required("First Name is required"),
-    lastName: Yup.string().required("Last Name is required"),
+    firstName: Yup.string()
+      .required("First Name is required")
+      .min(2, "Minimum 2 characters are required"),
+    lastName: Yup.string()
+      .required("Last Name is required")
+      .min(2, "Minimum 2 characters are required"),
     email: Yup.string()
-      .email("Invalid email format")
-      .required("Email is required"),
+      .required("Email is required")
+      .email("must be valid mail")
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        "Invalid email format"
+      ),
     profileImage: Yup.mixed()
-      .required("Profile picture is required")
+      .nullable()
       .test("fileFormat", "Only jpg, jpeg, png, webp are allowed", (value) => {
-        if (!value) return false;
+        if (!value) return true;
         const ext = value.name.split(".").pop().toLowerCase();
         return allowedExtensions.includes(ext);
       }),
@@ -51,6 +69,8 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
+    setFieldError({ field: "", message: "" });
 
     if (name === "profileImage") {
       const file = files[0];
@@ -62,6 +82,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFieldError({ field: "", message: "" });
+    setIsLoading(true);
 
     try {
       await schema.validate(formData, { abortEarly: false });
@@ -74,18 +96,29 @@ const Register = () => {
           firstName: "",
           lastName: "",
           email: "",
-          profileImage: "",
+          profileImage: null,
         });
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", response.data.user);
+        setIsLoading(false);
       } else {
         toast.error(response.data.message);
       }
     } catch (err) {
-      if (err.inner) {
+      if (err.name === "ValidationError" && err.inner) {
+        const priority = ["firstName", "lastName", "email", "profileImage"];
+        const errorMap = {};
+
         err.inner.forEach((error) => {
-          toast.error(error.message);
+          if (!errorMap[error.path]) {
+            errorMap[error.path] = error.message;
+          }
         });
+
+        for (const field of priority) {
+          if (errorMap[field]) {
+            setFieldError({ field, message: errorMap[field] });
+            break;
+          }
+        }
       } else if (err.response) {
         const errorMessage =
           err.response.data?.message ||
@@ -93,12 +126,15 @@ const Register = () => {
           `Error: ${err.response.status}`;
         toast.error(errorMessage);
         console.log("Backend error:", err.response.data);
+        setIsLoading(false);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
+    <div className="flex justify-center items-center md:m-4">
       <div className="bg-white md:shadow-gray-400 md:shadow-lg md:rounded-2xl p-6 w-full max-w-md">
         <h1 className="text-2xl font-bold font-sans tracking-wide text-center text-gray-800 mb-6">
           Register
@@ -114,6 +150,9 @@ const Register = () => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            {fieldError.field === "firstName" && (
+              <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
+            )}
           </div>
 
           <div>
@@ -125,17 +164,23 @@ const Register = () => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            {fieldError.field === "lastName" && (
+              <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-gray-700 mb-1">Email</label>
             <input
-              type="email"
+              type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            {fieldError.field === "email" && (
+              <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
+            )}
           </div>
 
           <div>
@@ -149,13 +194,23 @@ const Register = () => {
                file:rounded-md file:border-0 file:text-sm file:font-semibold 
                file:bg-gray-500 file:text-white hover:file:bg-gray-600"
             />
+            {fieldError.field === "profileImage" && (
+              <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-violet-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-violet-600 transition"
+            className="w-full bg-violet-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-violet-600 transition flex items-center justify-center gap-2"
+            disabled={isLoading}
           >
-            Register
+            {isLoading ? (
+              <>
+                Registering <Loader className="animate-spin w-5 h-5" />
+              </>
+            ) : (
+              "Register"
+            )}
           </button>
         </form>
       </div>

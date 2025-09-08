@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import * as Yup from "yup";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import toast from "react-hot-toast";
+import { Eye, EyeOff, Lock,Loader } from "lucide-react";
+import { AuthContext } from "../../context/AuthContext";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
 async function setNewPassword(token, pass) {
   try {
     const response = await axios.post(
-      `${baseUrl}/users/setpassword`,
+      `${baseUrl}/auth/setpassword`,
       { password: pass },
       {
         headers: {
@@ -29,24 +30,29 @@ const SetPassword = () => {
   const { token } = useParams();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [fieldError, setFieldError] = useState({ field: "", message: "" });
   const navigate = useNavigate();
+  const { isAuthenticated } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated]);
   const schema = Yup.object().shape({
     password: Yup.string()
-      .min(6, "Password must be at least 6 characters long")
-      .required("Password is required"),
+      .required("Password is required")
+      .min(6, "Password must be at least 6 characters long"),
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setFieldError({ field: "", message: "" });
+    setIsLoading(true);
     try {
       await schema.validate({ password }, { abortEarly: false });
 
-      const localToken = localStorage.getItem("token");
-      if (token !== localToken) {
-        throw "User not authorized";
-      }
       const response = await setNewPassword(token, password);
       console.log(response);
 
@@ -57,22 +63,35 @@ const SetPassword = () => {
         toast.error(response.data.message);
       }
     } catch (err) {
-      if (err.inner) {
+      if (err.name === "ValidationError" && err.inner) {
+        const priority = ["password"];
+        const errorMap = {};
+
         err.inner.forEach((error) => {
-          toast.error(error.message);
+          if (!errorMap[error.path]) {
+            errorMap[error.path] = error.message;
+          }
         });
+
+        for (const field of priority) {
+          if (errorMap[field]) {
+            setFieldError({ field, message: errorMap[field] });
+            break;
+          }
+        }
       } else if (err.response) {
         const errorMessage = err.response.data?.message;
         toast.error(errorMessage);
       } else {
         toast.error(err);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center md:m-15 m-0 bg-gray-50">
-      <Toaster />
       <div className="bg-white md:shadow-lg md:rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
@@ -109,25 +128,23 @@ const SetPassword = () => {
               </button>
             </div>
           </div>
-
+          {fieldError.field === "password" && (
+            <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
+          )}
           <button
             type="submit"
-            className={`w-full font-semibold py-3 px-4 rounded-lg transition duration-200 ${
-              !token
-                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                : "bg-violet-600 text-white hover:bg-violet-700 focus:ring-4 focus:ring-violet-200"
-            }`}
+            className={
+              "w-full font-semibold py-3 px-4 rounded-lg transition duration-200 bg-violet-600 text-white hover:bg-violet-700 focus:ring-4 focus:ring-violet-200 flex items-center justify-center gap-2"
+            }
           >
-            Set Password
+            {isLoading ? (
+              <>
+                Setting Password <Loader className="animate-spin w-5 h-5" />
+              </>
+            ) : (
+              "Set Password"
+            )}
           </button>
-
-          {!token && (
-            <div className="text-center">
-              <p className="text-red-500 text-sm">
-                Invalid or missing token. Please check your link.
-              </p>
-            </div>
-          )}
         </form>
       </div>
     </div>

@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Articles from "./Pages/Articles";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
-import SetPassword from "./Pages/Auth/setPassword";
+import SetPassword from "./Pages/Auth/SetPassword";
 import { Toaster } from "react-hot-toast";
 import ProtectedPages from "./Pages/ProtectedPages";
 function App() {
