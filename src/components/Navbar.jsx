@@ -2,12 +2,14 @@ import { Link } from "react-router";
 import HeaderButton from "./HeaderButton";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useContext(AuthContext);
 
   const handleLogout = () => {
     logout();
+    toast.success("LoggedOut Sucessfully")
   };
 
   return (
