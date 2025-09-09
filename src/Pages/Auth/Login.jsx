@@ -6,16 +6,6 @@ import toast from "react-hot-toast";
 import { AuthContext } from "../../context/AuthContext";
 import { Loader } from "lucide-react";
 
-const baseUrl = import.meta.env.VITE_BASE_URL;
-
-async function performLogin(formData) {
-  try {
-    const response = await axios.post(`${baseUrl}/auth/login`, formData);
-    return response;
-  } catch (err) {   
-    throw err;
-  }
-}
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -25,7 +15,16 @@ const Login = () => {
   const { login, isAuthenticated } = useContext(AuthContext);
   const [fieldError, setFieldError] = useState({ field: "", message: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
+  async function performLogin(formData) {
+    try {
+      const response = await axios.post(`${baseUrl}/auth/login`, formData);
+      return response;
+    } catch (err) {
+      throw err;
+    }
+  }
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
@@ -59,15 +58,13 @@ const Login = () => {
     try {
       await schema.validate(formData, { abortEarly: false });
       const response = await performLogin(formData);
-      console.log(response);
 
       if (response.status === 200) {
         toast.success(response.data.message);
         login(response.data.token, response.data.user);
         setIsLoading(false);
         navigate("/");
-      }
-      else {
+      } else {
         toast.error(response.data.message);
       }
     } catch (err) {
