@@ -3,12 +3,22 @@ import { useNavigate, useParams } from "react-router";
 import * as Yup from "yup";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, Lock,Loader } from "lucide-react";
+import { Eye, EyeOff, Lock, Loader } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
-async function setNewPassword(token, pass) {
+
+const SetPassword = () => {
+  const { token } = useParams();
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldError, setFieldError] = useState({ field: "", message: "" });
+  const navigate = useNavigate();
+  const { isAuthenticated,login } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function setNewPassword(token, pass) {
   try {
     const response = await axios.post(
       `${baseUrl}/auth/setpassword`,
@@ -26,18 +36,9 @@ async function setNewPassword(token, pass) {
   }
 }
 
-const SetPassword = () => {
-  const { token } = useParams();
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [fieldError, setFieldError] = useState({ field: "", message: "" });
-  const navigate = useNavigate();
-  const { isAuthenticated } = useContext(AuthContext);
-  const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate("/articles");
     }
   }, [isAuthenticated]);
   const schema = Yup.object().shape({
@@ -54,11 +55,11 @@ const SetPassword = () => {
       await schema.validate({ password }, { abortEarly: false });
 
       const response = await setNewPassword(token, password);
-      console.log(response);
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         toast.success(response.data.message);
-        navigate("/");
+        login(token, response.data.user);
+        navigate("/articles");
       } else {
         toast.error(response.data.message);
       }
@@ -83,7 +84,7 @@ const SetPassword = () => {
         const errorMessage = err.response.data?.message;
         toast.error(errorMessage);
       } else {
-        toast.error(err);
+        toast.error(err.message || "Something went wrong");
       }
     } finally {
       setIsLoading(false);
@@ -91,7 +92,7 @@ const SetPassword = () => {
   };
 
   return (
-    <div className="flex justify-center items-center md:m-15 m-0 bg-gray-50">
+    <div className="flex justify-center items-center md:m-15 m-0 bg-white">
       <div className="bg-white md:shadow-lg md:rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">

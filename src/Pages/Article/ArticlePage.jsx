@@ -3,6 +3,8 @@ import { useParams } from "react-router";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import { Loader } from "lucide-react";
+import BackButton from "../../components/BackButton";
+import Navbar from "../../components/Navbar";
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -41,13 +43,16 @@ const ArticlePage = () => {
   if (!article) return <p>Article not found.</p>;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 md:shadow-gray-400 md:shadow-lg md:rounded-2xl my-5">
+    <>
+    <Navbar/>
+    <BackButton/>
+    <div className="max-w-6xl mx-auto p-6 md:shadow-gray-400 md:shadow-lg md:rounded-2xl my-[6px]">
       <h1 className="text-3xl font-bold mb-4">{article.title}</h1>
-      <div className="w-full h-full overflow-hidden rounded-xl mb-6">
+      <div className="w-full h-80 overflow-hidden rounded-xl mb-6">
         <img
           src={`${imagePath}${article.articleImage}`}
           alt={article.title}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-fill  "
         />
       </div>
 
@@ -55,6 +60,7 @@ const ArticlePage = () => {
         {article.content}
       </p>
     </div>
+    </>
   );
 };
 

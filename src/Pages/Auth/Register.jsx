@@ -4,7 +4,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -39,7 +39,7 @@ const Register = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate("/articles");
     }
   }, [isAuthenticated]);
   const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
@@ -134,7 +134,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex justify-center items-center md:m-4">
+    <div className="flex justify-center items-center md:m-4 bg-white">
       <div className="bg-white md:shadow-gray-400 md:shadow-lg md:rounded-2xl p-6 w-full max-w-md">
         <h1 className="text-2xl font-bold font-sans tracking-wide text-center text-gray-800 mb-6">
           Register
@@ -211,6 +211,10 @@ const Register = () => {
             )}
           </button>
         </form>
+        <div className="flex justify-end mt-2">
+          <p>Already have an account?</p>
+          <Link to="/login" className="text-blue-500 underline ml-1">Login here</Link>
+        </div>
       </div>
     </div>
   );
