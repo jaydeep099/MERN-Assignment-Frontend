@@ -7,13 +7,14 @@ import { AuthContext } from "../context/AuthContext";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 const imagePath = import.meta.env.VITE_IMAGE_PATH;
+
 const ArticleCard = ({ article, onDeleteSuccess }) => {
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  
-  const currentUser = JSON.parse(localStorage.getItem('user'))
+
+  const currentUser = JSON.parse(localStorage.getItem("user"));
   const isSameUser = article.authorId === currentUser._id;
 
   const navigateToUpdate = (id) => {
@@ -44,7 +45,7 @@ const ArticleCard = ({ article, onDeleteSuccess }) => {
           <img
             src={`${imagePath}${article.articleImage}`}
             alt="image"
-            className="w-full h-full object-cover"
+            className="w-full h-50 object-fit"
           />
         </div>
 

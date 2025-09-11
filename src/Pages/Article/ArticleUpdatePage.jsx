@@ -67,7 +67,7 @@ const ArticleUpdatePage = () => {
     setFormData((prev) => ({ ...prev, articleImage: e.target.files[0] }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, status) => {
     e.preventDefault();
     try {
       await ArticleSchema.validate(formData, { abortEarly: false });
@@ -76,6 +76,7 @@ const ArticleUpdatePage = () => {
       const updateData = new FormData();
       updateData.append("title", formData.title);
       updateData.append("content", formData.content);
+      updateData.append("articleStatus", status);
 
       if (formData.articleImage) {
         updateData.append("articleImage", formData.articleImage);
@@ -113,7 +114,7 @@ const ArticleUpdatePage = () => {
             Update Article
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form className="space-y-5">
             <div>
               <label className="block text-gray-700 mb-1">Title</label>
               <input
@@ -160,12 +161,20 @@ const ArticleUpdatePage = () => {
               )}
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-green-600 text-white font-medium py-2 rounded-lg shadow hover:bg-green-700 transition"
-            >
-              Update Article
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="w-full bg-gray-600 text-white font-medium py-2 rounded-lg shadow hover:bg-gray-700 transition"
+                onClick={(e) => handleSubmit(e, "draft")}
+              >
+                Save As Draft
+              </button>
+              <button
+                onClick={(e) => handleSubmit(e, "published")}
+                className="w-full bg-green-600 text-white font-medium py-2 rounded-lg shadow hover:bg-green-700 transition"
+              >
+                Update Article
+              </button>
+            </div>
           </form>
         </div>
       </div>

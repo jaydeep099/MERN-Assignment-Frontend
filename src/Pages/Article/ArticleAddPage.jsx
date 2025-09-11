@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
 import { AuthContext } from "../../context/AuthContext";
@@ -13,7 +13,6 @@ const ArticleAddPage = () => {
     title: "",
     articleImage: null,
     content: "",
-    articleStatus: "",
   });
   const [errors, setErrors] = useState({});
   const { token, logout } = useContext(AuthContext);
@@ -38,7 +37,7 @@ const ArticleAddPage = () => {
     setFormData((prev) => ({ ...prev, articleImage: e.target.files[0] }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, status) => {
     e.preventDefault();
 
     try {
@@ -48,7 +47,7 @@ const ArticleAddPage = () => {
       const data = new FormData();
       data.append("title", formData.title);
       data.append("content", formData.content);
-      data.append("articleStatus", "published");
+      data.append("articleStatus", status);
       if (formData.articleImage) {
         data.append("articleImage", formData.articleImage);
       }
@@ -59,9 +58,13 @@ const ArticleAddPage = () => {
         },
       });
 
-      if (response.status === 201) {
+      if (response.status === 201 || 200) {
         navigate("/articles");
-        toast.success("Article submitted successfully!");
+        toast.success(
+          status === "draft"
+            ? "Article saved as draft!"
+            : "Article published successfully!"
+        );
       }
     } catch (err) {
       if (err.inner) {
@@ -137,12 +140,20 @@ const ArticleAddPage = () => {
               )}
             </div>
 
-            <button
-              className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              onClick={handleSubmit}
-            >
-              Post
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="w-full bg-gray-600 text-white font-medium py-2 rounded-lg shadow hover:bg-gray-700 transition"
+                onClick={(e) => handleSubmit(e, "draft")}
+              >
+                Save As Draft
+              </button>
+              <button
+                className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                onClick={(e) => handleSubmit(e, "published")}
+              >
+                Publish
+              </button>
+            </div>
           </form>
         </div>
       </div>
