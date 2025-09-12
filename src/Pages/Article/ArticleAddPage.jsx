@@ -15,7 +15,7 @@ const ArticleAddPage = () => {
     content: "",
   });
   const [errors, setErrors] = useState({});
-  const { token, logout } = useContext(AuthContext);
+  const { token, logout, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const ArticleSchema = Yup.object().shape({
@@ -27,6 +27,13 @@ const ArticleAddPage = () => {
       .min(10, "Content must be at least 10 characters")
       .required("Content is required"),
   });
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      logout();
+      navigate("/login");
+    }
+  }, [isAuthenticated, logout, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

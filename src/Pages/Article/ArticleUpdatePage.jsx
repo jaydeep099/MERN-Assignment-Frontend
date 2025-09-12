@@ -21,7 +21,7 @@ const ArticleSchema = Yup.object().shape({
 
 const ArticleUpdatePage = () => {
   const { id } = useParams();
-  const { token, logout } = useContext(AuthContext);
+  const { token, logout, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -54,6 +54,13 @@ const ArticleUpdatePage = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, logout, navigate]);
+
   useEffect(() => {
     fetchArticle();
   }, [id, token]);
