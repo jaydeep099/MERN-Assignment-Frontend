@@ -27,7 +27,7 @@ const Articles = () => {
   const selectedOption =
     statusOptions.find((opt) => opt.value === status) || statusOptions[0];
   const currentUser = JSON.parse(localStorage.getItem("user"));
-  const userId = currentUser._id;
+  const userId = currentUser?._id;
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const fetchArticles = async () => {
@@ -202,7 +202,7 @@ const Articles = () => {
             </div>
           )}
         </div>
-        
+
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 mt-8 pb-8">
             <button
