@@ -4,24 +4,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
-const baseUrl = import.meta.env.VITE_BASE_URL;
-
-async function register(formData) {
-  try {
-    const data = new FormData();
-    data.append("firstName", formData.firstName);
-    data.append("lastName", formData.lastName);
-    data.append("email", formData.email);
-    data.append("profileImage", formData.profileImage);
-
-    const response = await axios.post(`${baseUrl}/auth/register`, data);
-    console.log(response, response.data.message);
-    return response;
-  } catch (err) {
-    throw err;
-  }
-}
+import { Link, useNavigate } from "react-router";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -34,12 +17,29 @@ const Register = () => {
   const [fieldError, setFieldError] = useState({ field: "", message: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const { isAuthenticated } = useContext(AuthContext);
 
+  async function register(formData) {
+    try {
+      const data = new FormData();
+      data.append("firstName", formData.firstName);
+      data.append("lastName", formData.lastName);
+      data.append("email", formData.email);
+      data.append("profileImage", formData.profileImage);
+
+      const response = await axios.post(`${baseUrl}/auth/register`, data);
+      console.log(response, response.data.message);
+      return response;
+    } catch (err) {
+      throw err;
+    }
+  }
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate("/articles");
     }
   }, [isAuthenticated]);
   const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
@@ -134,7 +134,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex justify-center items-center md:m-4">
+    <div className="flex justify-center items-center md:m-4 bg-white">
       <div className="bg-white md:shadow-gray-400 md:shadow-lg md:rounded-2xl p-6 w-full max-w-md">
         <h1 className="text-2xl font-bold font-sans tracking-wide text-center text-gray-800 mb-6">
           Register
@@ -190,9 +190,7 @@ const Register = () => {
               name="profileImage"
               accept=".jpg,.jpeg,.png,.webp"
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2 cursor-pointer file:mr-4 file:py-2 file:px-4 
-               file:rounded-md file:border-0 file:text-sm file:font-semibold 
-               file:bg-gray-500 file:text-white hover:file:bg-gray-600"
+              className="w-full border border-gray-300 rounded-lg bg-white px-3 py-2 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold  file:bg-gray-500 file:text-white hover:file:bg-gray-600"
             />
             {fieldError.field === "profileImage" && (
               <p className="text-red-500 text-sm mt-1">{fieldError.message}</p>
@@ -213,6 +211,10 @@ const Register = () => {
             )}
           </button>
         </form>
+        <div className="flex justify-end mt-2">
+          <p>Already have an account?</p>
+          <Link to="/login" className="text-blue-500 underline ml-1">Login here</Link>
+        </div>
       </div>
     </div>
   );
